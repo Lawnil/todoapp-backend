@@ -4,6 +4,8 @@ const cors = require("cors");
 app.use(cors());
 app.use(express.json());
 const tasks = require("./index.js");
+const mongoose = require("mongoose");
+const Joi = require("joi");
 
 function errorHandler(err, res, req) {
   if (err.name === "CastError")
@@ -19,7 +21,7 @@ app.get("/", (req, res) => {
   res.send("To Do Task App");
 });
 
-app.get("/api/tasks", (req, res) => {
+app.get("/api/tasks", async (req, res) => {
   tasks.find({}).exec(function(err, task) {
     if (err) {
     } else {
@@ -45,6 +47,8 @@ app.get("/api/tasks/:id", (req, res) => {
 });
 
 app.post("/api/tasks", (req, res) => {
+  const { error } = validateTask(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
   tasks.create(req.body).then(function(task) {
     res.send(task);
   });
@@ -54,12 +58,12 @@ app.put("/api/tasks/:id", (req, res) => {
   tasks
     .findByIdAndUpdate({ _id: req.params.id }, req.body)
     .exec(function(err, task) {
-      if (err) {
-        return res.status(404).send({
-          type: "error",
-          message: "Cannot find the task to update"
-        });
-      }
+      if (!task)
+        return res
+          .status(404)
+          .send({ type: "error", message: "Task could not be found" });
+      const { error } = validateTask(req.body);
+      if (error) return res.status(400).send(error.details[0].message);
       tasks.findOne({ _id: req.params.id }).then(function(task) {
         res.send(task);
       });
@@ -68,15 +72,24 @@ app.put("/api/tasks/:id", (req, res) => {
 
 app.delete("/api/tasks/:id", (req, res) => {
   tasks.findByIdAndRemove({ _id: req.params.id }).exec(function(err, task) {
-    if (err) {
-      return res.status(404).send({
-        type: "error",
-        message: "Cannot find the given task to delete"
-      });
-    }
-    res.send("Data has been deleted..");
+    if (!task)
+      return res
+        .status(404)
+        .send({ type: "error", message: "Task could not be found" });
+    res
+      .status(200)
+      .send({ type: "success", message: "Data has been deleted.." });
   });
 });
 
-const port = process.env.PORT || 3000;
+function validateTask(task) {
+  const schema = {
+    taskstring: Joi.string()
+      .min(5)
+      .required()
+  };
+  return Joi.validate(task, schema);
+}
+
+const port = process.env.PORT || 4000;
 app.listen(port, () => console.log(`Listening on port ${port}...`));
