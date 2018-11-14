@@ -6,7 +6,7 @@ mongoose
 
 mongoose.Promise = global.Promise;
 const taskSchema = new mongoose.Schema({
-  taskstring: String
+  taskstring: { type: String, required: true }
 });
 
 const Task = mongoose.model("Task", taskSchema);
