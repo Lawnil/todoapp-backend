@@ -1,3 +1,7 @@
+const authm = require("./middleware/authm");
+const config = require("config");
+const users = require("./users.js");
+const auth = require("./auth.js");
 const express = require("express");
 const app = express();
 const cors = require("cors");
@@ -6,6 +10,15 @@ app.use(express.json());
 const tasks = require("./index.js");
 const mongoose = require("mongoose");
 const Joi = require("joi");
+Joi.objectId = require("joi-objectid")(Joi);
+
+app.use("/api/auth", auth);
+app.use("/api/users", users);
+
+if (!config.get("jwtPrivateKey")) {
+  console.error("FATAL ERROR: jwtPrivateKey is not defined.");
+  process.exit(1);
+}
 
 function errorHandler(err, res, req) {
   if (err.name === "CastError")
@@ -16,6 +29,7 @@ function errorHandler(err, res, req) {
     res.status(500).send({ type: "error", message: "Internal Error" });
   }
 }
+4;
 
 app.get("/", (req, res) => {
   res.send("To Do Task App");
@@ -48,9 +62,13 @@ app.get("/api/tasks/:id", (req, res) => {
 
 app.post("/api/tasks", (req, res) => {
   const { error } = validateTask(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
+  if (error)
+    return res.status(400).send({
+      type: "error",
+      message: "Task string needs to be at least 5 characters long"
+    });
   tasks.create(req.body).then(function(task) {
-    res.send(task);
+    res.send({ type: "success", task });
   });
 });
 
@@ -88,6 +106,7 @@ function validateTask(task) {
       .min(5)
       .required()
   };
+
   return Joi.validate(task, schema);
 }
 

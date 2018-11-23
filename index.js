@@ -6,7 +6,7 @@ mongoose
 
 mongoose.Promise = global.Promise;
 const taskSchema = new mongoose.Schema({
-  taskstring: { type: String, required: true }
+  taskstring: { type: String, required: true, minlength: 5 }
 });
 
 const Task = mongoose.model("Task", taskSchema);
@@ -21,4 +21,5 @@ const Task = mongoose.model("Task", taskSchema);
 }
 
 createTask();*/
+
 module.exports = Task;

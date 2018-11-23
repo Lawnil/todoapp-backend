@@ -1,0 +1,31 @@
+SUCCESS:
+
+200
+{
+    "type": "success",
+    "message": {
+        "task": {
+            "_id": "XXXXX",
+            "taskstring": "XXXXX",
+            "_v": 0
+        }
+    }
+}
+
+404
+{
+    "type": "error",
+    "message": "Task not found"
+}
+
+400
+{
+    "type": "error",
+    "message": "Bad Request: Missing title"
+}
+
+500
+{
+    "type": "error",
+    "message": "Internal Server Error: DB crash log"
+}
